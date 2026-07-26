@@ -18,7 +18,7 @@ public class VanishCommand {
         UUID targetUuid;
 
         if (targetName == null) {
-            targetUuid = player;
+            targetUuid = player.getUniqueId();
         } else {
             org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
             if (target.getUniqueId() == null) {

@@ -9,8 +9,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.2.build.+")
-    compileOnly("dev.folia:folia-api:26.2.build,)")
+   // compileOnly("io.papermc.paper:paper-api:26.2.build.+")
+    compileOnly("dev.folia:folia-api:[26.1.2.build,)")
 }
 
 java {
