@@ -1,0 +1,9 @@
+name: Hanako
+description: $description
+version: '${version}'
+
+main: pt.starfall.hanako.Hanako
+api-version: '26.2'
+load: POSTWORLD
+
+authors: [ taigumimiss ]
