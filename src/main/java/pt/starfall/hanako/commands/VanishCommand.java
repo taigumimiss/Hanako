@@ -1,8 +1,11 @@
 package pt.starfall.hanako.commands;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import pt.starfall.hanako.manager.VanishManager;
+
+import java.util.UUID;
 
 public class VanishCommand {
 
@@ -11,9 +14,24 @@ public class VanishCommand {
             src.getSender().sendMessage("Hey! este commando so pode ser usado por players!");
             return 0;
         }
-        VanishManager.getInstance().toggleVanish(player);
+
+        UUID targetUuid;
+
+        if (targetName == null) {
+            targetUuid = player;
+        } else {
+            org.bukkit.OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+            if (target.getUniqueId() == null) {
+                return 0;
+            }
+            targetUuid = target.getUniqueId();
+        }
+
+        VanishManager.getInstance().toggleVanish(Bukkit.getPlayer(targetUuid));
         return 1;
     }
+
+
 
 
     public static int executeDefault(CommandSourceStack src) {

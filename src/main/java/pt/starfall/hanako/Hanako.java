@@ -2,7 +2,6 @@ package pt.starfall.hanako;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import pt.starfall.hanako.commands.VanishCommandManager;
-import pt.starfall.hanako.config.ConfigManager;
 import pt.starfall.hanako.listener.PlayerJoinListener;
 import pt.starfall.hanako.manager.VanishManager;
 
