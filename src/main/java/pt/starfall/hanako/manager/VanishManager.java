@@ -78,4 +78,12 @@ public class VanishManager {
             viewer.hidePlayer(plugin, vanished);
         }
     }
+
+    public boolean isVanished(UUID uuid) {
+        return hiddenPlayers.contains(uuid);
+    }
+
+    public int getOnlineVanishedCount() {
+        return hiddenPlayers.size();
+    }
 }

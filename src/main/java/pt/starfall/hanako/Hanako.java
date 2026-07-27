@@ -1,18 +1,25 @@
 package pt.starfall.hanako;
 
+import com.destroystokyo.paper.event.server.PaperServerListPingEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import pt.starfall.hanako.commands.VanishCommandManager;
 import pt.starfall.hanako.listener.PlayerJoinListener;
+import pt.starfall.hanako.listener.ServerPingListener;
 import pt.starfall.hanako.manager.VanishManager;
 
 public final class Hanako extends JavaPlugin {
+    private static Hanako instance;
+
 
     @Override
     public void onEnable() {
+        instance = this;
+
         VanishManager.initialize(this);
 
         //Events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        getServer().getPluginManager().registerEvents(new ServerPingListener(), this);
 
         //Commands
         VanishCommandManager.initialize();
@@ -31,5 +38,9 @@ public final class Hanako extends JavaPlugin {
 
     @Override
     public void onDisable() {
+    }
+
+    public static Hanako getInstance() {
+        return instance;
     }
 }
