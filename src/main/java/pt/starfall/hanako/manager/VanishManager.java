@@ -6,6 +6,7 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import pt.starfall.hanako.data.RedisManager;
 
 import java.util.*;
 
@@ -15,7 +16,7 @@ public class VanishManager {
     private final JavaPlugin plugin;
 
     private final Set<UUID> hiddenPlayers = new HashSet<>();
-    private final Map<UUID, BossBar> BossBars = new HashMap<>();
+    private final Map<UUID, BossBar> bossBars = new HashMap<>();
 
     private VanishManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -38,17 +39,11 @@ public class VanishManager {
     }
 
     public void enableVanish(Player target) {
-        hiddenPlayers.add(target.getUniqueId());
-        hidePlayer(target);
-        showBossBar(target);
+        setVanished(target.getUniqueId(), true);
     }
 
     public void disableVanish(Player target) {
-        hiddenPlayers.remove(target.getUniqueId());
-        hideBossBar(target);
-        for (Player viewer : Bukkit.getOnlinePlayers()) {
-            viewer.showPlayer(plugin, target);
-        }
+        setVanished(target.getUniqueId(), false);
     }
 
     public void toggleVanish(Player target) {
@@ -59,6 +54,32 @@ public class VanishManager {
         }
     }
 
+    public void setVanished(UUID uuid, boolean vanished) {
+        if (vanished) {
+            if (!hiddenPlayers.add(uuid)) return;
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                hidePlayer(player);
+                showBossBar(player);
+            }
+            RedisManager.getInstance().setVanished(uuid, true);
+        } else {
+            if (!hiddenPlayers.remove(uuid)) return;
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                hideBossBar(player);
+                showPlayerToAll(player);
+            }
+            RedisManager.getInstance().setVanished(uuid, false);
+        }
+    }
+
+    public void restoreVanished(Player player) {
+        hiddenPlayers.add(player.getUniqueId());
+        hidePlayer(player);
+        showBossBar(player);
+    }
+
     public void hidePlayer(Player target) {
         for (Player viewer : Bukkit.getOnlinePlayers()) {
             if (!viewer.equals(target) && !viewer.hasPermission("hanako.see")) {
@@ -67,7 +88,19 @@ public class VanishManager {
         }
     }
 
+    private void showPlayerToAll(Player player) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            viewer.showPlayer(plugin, player);
+        }
+    }
+
     public void showBossBar(Player player) {
+        UUID uuid = player.getUniqueId();
+        BossBar existing = bossBars.remove(uuid);
+        if (existing != null) {
+            existing.removeAll();
+        }
+
         BossBar bossBar = Bukkit.createBossBar(
                 "Estás em vanish",
                 BarColor.GREEN,
@@ -77,12 +110,20 @@ public class VanishManager {
         bossBar.setProgress(1.0);
         bossBar.addPlayer(player);
 
-        BossBars.put(player.getUniqueId(), bossBar);
+        bossBars.put(uuid, bossBar);
     }
 
     public void hideBossBar(Player player) {
-        BossBar bossBar = BossBars.remove(player.getUniqueId());
+        BossBar bossBar = bossBars.remove(player.getUniqueId());
 
+        if (bossBar != null) {
+            bossBar.removeAll();
+        }
+    }
+
+    public void removeVanished(UUID uuid) {
+        hiddenPlayers.remove(uuid);
+        BossBar bossBar = bossBars.remove(uuid);
         if (bossBar != null) {
             bossBar.removeAll();
         }
@@ -109,6 +150,11 @@ public class VanishManager {
     }
 
     public int getOnlineVanishedCount() {
-        return hiddenPlayers.size();
+        return (int) hiddenPlayers.stream()
+                .filter(uuid -> {
+                    Player player = Bukkit.getPlayer(uuid);
+                    return player != null && player.isOnline();
+                })
+                .count();
     }
 }

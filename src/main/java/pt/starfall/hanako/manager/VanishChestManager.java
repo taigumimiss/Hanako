@@ -12,7 +12,7 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.plugin.java.JavaPlugin;
+import pt.starfall.hanako.util.SchedulerUtil;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -22,21 +22,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class VanishChestManager {
 
+    //TODO: Suppress chest sounds when opened by vanished
+
     private static VanishChestManager instance;
 
-    private final JavaPlugin plugin;
     private final Map<BlockPos, ChestState> chests = new ConcurrentHashMap<>();
 
-    private VanishChestManager(JavaPlugin plugin) {
-        this.plugin = plugin;
+    private VanishChestManager() {
     }
 
-    public static synchronized void initialize(JavaPlugin plugin) {
+    public static synchronized void initialize() {
         if (instance != null) {
             throw new IllegalStateException("VanishChestManager already is initialized");
         }
 
-        instance = new VanishChestManager(plugin);
+        instance = new VanishChestManager();
     }
 
     public static VanishChestManager getInstance() {
@@ -90,9 +90,6 @@ public class VanishChestManager {
         }
 
         if (state.isEmpty()) {
-            if (wasVanishOnly) {
-                state.suppressCloseSound = true;
-            }
             scheduleCleanup(state);
         }
     }
@@ -102,20 +99,15 @@ public class VanishChestManager {
         return state != null && state.isVanishOnly();
     }
 
-    public boolean shouldSuppressSound(String world, int x, int y, int z) {
-        ChestState state = chests.get(new BlockPos(world, x, y, z));
-        return state != null && (state.vanished > 0 || state.suppressCloseSound);
-    }
-
     private void scheduleCleanup(ChestState state) {
         Set<BlockPos> positions = new HashSet<>(state.positions);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        SchedulerUtil.runSync(() -> {
             for (BlockPos pos : positions) {
                 if (chests.get(pos) == state) {
                     chests.remove(pos);
                 }
             }
-        }, 1L);
+        });
     }
 
     private void registerOtherHalf(Location loc, ChestState state) {
@@ -176,8 +168,7 @@ public class VanishChestManager {
     private static final class ChestState {
         int vanished = 0;
         int normal = 0;
-        boolean suppressCloseSound = false;
-        final Set<BlockPos> positions = new HashSet<>();
+        final Set<BlockPos> positions = ConcurrentHashMap.newKeySet();
 
         boolean isVanishOnly() {
             return vanished > 0 && normal == 0;

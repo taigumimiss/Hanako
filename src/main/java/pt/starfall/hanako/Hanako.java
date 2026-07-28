@@ -4,10 +4,13 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import pt.starfall.hanako.commands.VanishCommandManager;
+import pt.starfall.hanako.config.ConfigManager;
 import pt.starfall.hanako.listener.ChestPacketListener;
 import pt.starfall.hanako.listener.PlayerInteractListener;
 import pt.starfall.hanako.listener.PlayerJoinListener;
+import pt.starfall.hanako.listener.PlayerQuitListener;
 import pt.starfall.hanako.listener.ServerPingListener;
+import pt.starfall.hanako.data.RedisManager;
 import pt.starfall.hanako.manager.VanishChestManager;
 import pt.starfall.hanako.manager.VanishManager;
 
@@ -20,11 +23,17 @@ public final class Hanako extends JavaPlugin {
         instance = this;
 
         //Managers
+        ConfigManager.initialize();
         VanishManager.initialize(this);
-        VanishChestManager.initialize(this);
+        VanishChestManager.initialize();
+        RedisManager.initialize();
+        RedisManager.getInstance().connect();
+        RedisManager.getInstance().addVanishListener(uuid -> VanishManager.getInstance().setVanished(uuid, true));
+        RedisManager.getInstance().addUnvanishListener(uuid -> VanishManager.getInstance().setVanished(uuid, false));
 
         //Events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerQuitListener(), this);
         getServer().getPluginManager().registerEvents(new ServerPingListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
 
@@ -51,6 +60,7 @@ public final class Hanako extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        RedisManager.getInstance().disconnect();
     }
 
     public static Hanako getInstance() {

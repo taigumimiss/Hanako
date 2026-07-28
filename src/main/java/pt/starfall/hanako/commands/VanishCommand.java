@@ -1,6 +1,7 @@
 package pt.starfall.hanako.commands;
 
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import pt.starfall.hanako.manager.VanishManager;
@@ -9,7 +10,7 @@ import java.util.UUID;
 
 public class VanishCommand {
 
-    public static int execute(CommandSourceStack src, String targetName) {
+    public static int execute(CommandSourceStack src, String targetName, boolean silent) {
         if (!(src.getSender() instanceof Player player)) {
             src.getSender().sendMessage("Hey! este commando so pode ser usado por players!");
             return 0;
@@ -27,14 +28,23 @@ public class VanishCommand {
             targetUuid = target.getUniqueId();
         }
 
-        VanishManager.getInstance().toggleVanish(Bukkit.getPlayer(targetUuid));
+        Player target = Bukkit.getPlayer(targetUuid);
+        if (target == null || !target.isOnline()) {
+            src.getSender().sendMessage("Hey! esse jogador não está online!");
+            return 0;
+        }
+
+        boolean wasVanished = VanishManager.getInstance().isVanished(targetUuid);
+        VanishManager.getInstance().toggleVanish(target);
+
+        if (!silent) {
+            if (wasVanished) {
+                Bukkit.broadcast(Component.text("§e" + target.getName() + " joined the game"));
+            } else {
+                Bukkit.broadcast(Component.text("§e" + target.getName() + " left the game"));
+            }
+        }
+
         return 1;
-    }
-
-
-
-
-    public static int executeDefault(CommandSourceStack src) {
-        return execute(src, null);
     }
 }
