@@ -6,9 +6,12 @@ plugins {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven ("https://repo.codemc.io/repository/maven-releases/")
+    maven ("https://repo.codemc.io/repository/maven-snapshots/")
 }
 
 dependencies {
+    compileOnly("com.github.retrooper:packetevents-spigot:2.13.0")
     compileOnly("dev.folia:folia-api:[26.1.2.build,)")
 }
 
