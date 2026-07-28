@@ -43,10 +43,13 @@ public class VanishCommandManager {
     public LiteralCommandNode<CommandSourceStack> build() {
         return Commands.literal("vanish")
                 .requires(src -> src.getSender().hasPermission("hanako.use"))
-                .executes(ctx -> VanishCommand.executeDefault(ctx.getSource()))
+                .executes(ctx -> VanishCommand.execute(ctx.getSource(), ctx.getSource().getSender().getName(), false))
                 .then(Commands.argument("player", StringArgumentType.word())
                         .suggests(VanishCommandManager::suggestOnlinePlayers)
-                        .executes(ctx -> VanishCommand.execute(ctx.getSource(), ctx.getArgument("player", String.class)))
+                        .executes(ctx -> VanishCommand.execute(ctx.getSource(), ctx.getArgument("player", String.class), false))
+                        .then(Commands.literal("-s")
+                                .executes(ctx -> VanishCommand.execute(ctx.getSource(), ctx.getArgument("player", String.class), true))
+                        )
                 )
                 .build();
     }
